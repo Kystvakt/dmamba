@@ -3,7 +3,8 @@
 # when running the train script.
 
 data_base_dir: /data/bubble
-log_dir: /home/ubuntu/bubble-ml/logs
+log_dir: logs
+#log_dir: /home/ubuntu/bubble-ml/logs
 
 train: True
 test: True

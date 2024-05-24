@@ -17,21 +17,23 @@ def temp_cmap():
     return cmap
 
 
-def plt_iter_mae(temps, labels):
+def plt_iter_mae(temps, labels, task, model_name):
+    """
+    Args:
+        temps: Predicted temperature
+        labels: Label data
+        task: 'temperature' or 'velocity'
+        model_name: Name of the model
+    """
     plt.rc("font", family="serif", size=14, weight="bold")
     plt.rc("axes", labelweight="bold")
     rmses = []
     for i in range(len(temps)):
         rmse = torch.sqrt(torch.mean(((temps[i] - labels[i]) ** 2).detach().cpu()))
         rmses.append(rmse)
-    # MH (Start)
-    # MH (Start)
-    # job_id = os.environ['SLURM_JOB_ID']
-    # job_path = Path(f'test_im/temp/{job_id}/')
-    job_path = Path("./logs/test")
-    # MH (End)
+    job_path = Path(f"./logs/test/{task}/{model_name}")
     job_path.mkdir(parents=True, exist_ok=True)
-    with open(str(job_path) + 'iter_rmse', 'w+') as f:
+    with open(str(job_path) + '_iter_rmse', 'w+') as f:
         for rmse in rmses:
             f.write(f'{rmse}\n')
 
@@ -80,17 +82,19 @@ def plt_temp(temps, labels, model_name):
     # MH (Start)
     # job_id = os.environ['SLURM_JOB_ID']
     # im_path = Path(f'test_im/temp/{job_id}/')
-    im_path = Path("./logs/test")
+    im_path = Path(f"./logs/test/temperature/{model_name}")
     # MH (End)
     im_path.mkdir(parents=True, exist_ok=True)
-    torch.save(temps, f'{im_path}/model_ouput.pt')
-    torch.save(labels, f'{im_path}/sim_ouput.pt')
+    torch.save(temps, im_path / 'model_output.pt')
+    torch.save(labels, im_path / 'sim_output.pt')
 
 
-def plt_vel(vel_preds, vel_labels,
-            velx_preds, velx_labels,
-            vely_preds, vely_labels,
-            model_name):
+def plt_vel(
+        vel_preds, vel_labels,
+        velx_preds, velx_labels,
+        vely_preds, vely_labels,
+        model_name
+):
     # vel_preds = (vel_preds + 1) / 2
     # vel_labels = (vel_labels + 1) / 2
 
@@ -142,9 +146,9 @@ def plt_vel(vel_preds, vel_labels,
     im_path.mkdir(parents=True, exist_ok=True)
     # MH (End)
 
-    torch.save(vel_preds, f'{im_path}/mag_ouput.pt')
-    torch.save(vel_labels, f'{im_path}/mag_label.pt')
-    torch.save(velx_preds, f'{im_path}/velx_output.pt')
-    torch.save(velx_labels, f'{im_path}/velx_label.pt')
-    torch.save(vely_preds, f'{im_path}/vely_output.pt')
-    torch.save(vely_labels, f'{im_path}/vely_label.pt')
+    torch.save(vel_preds, im_path / 'mag_ouput.pt')
+    torch.save(vel_labels, im_path / 'mag_label.pt')
+    torch.save(velx_preds, im_path / 'velx_output.pt')
+    torch.save(velx_labels, im_path / 'velx_label.pt')
+    torch.save(vely_preds, im_path / 'vely_output.pt')
+    torch.save(vely_labels, im_path / 'vely_label.pt')

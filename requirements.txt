@@ -6,4 +6,4 @@ matplotlib~=3.8.4
 h5py~=3.11.0
 torchvision~=0.17.2
 omegaconf~=2.3.0
-mamba_ssm
+hydra-core~=1.3.2

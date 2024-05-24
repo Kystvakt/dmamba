@@ -7,7 +7,7 @@ from layers.mamba import Mamba3dLayer
 
 
 class DMamba(nn.Module):
-    def __init__(self, config, dataset_name='temp_input_dataset'):
+    def __init__(self, config, dataset_name='temp_dataset'):
         super().__init__()
 
         # Configuration
@@ -32,7 +32,7 @@ class DMamba(nn.Module):
 
         # Task
         self.dataset_name = dataset_name
-        if self.dataset_name == 'temp_input_dataset':
+        if self.dataset_name == 'temp_dataset':
             self.out_channels = 5
         elif self.dataset_name == 'vel_dataset':
             self.out_channels = 15
@@ -103,11 +103,10 @@ class DMamba(nn.Module):
         self.to_latent = nn.Identity()
 
         # Head
-        if self.dataset_name == 'temp_input_dataset':
+        if self.dataset_name == 'temp_dataset':
             self.head = UnPatchEmbed3d(
                 patch_size=self.patch_size,
                 stride=self.stride,
-                # channels=self.out_channels,
                 channels=1,
                 d_embed=self.dim,
                 bias=True
@@ -130,7 +129,7 @@ class DMamba(nn.Module):
 
     def forward(self, x: torch.Tensor):
         # Predicting temperature
-        if self.dataset_name == 'temp_input_dataset':
+        if self.dataset_name == 'temp_dataset':
             temp = x[:, :self.time_window, ...]
             u = x[:, self.time_window:2 * self.time_window, ...]
             v = x[:, 3 * self.time_window:4 * self.time_window, ...]
@@ -196,7 +195,7 @@ class DMamba(nn.Module):
 
         # Head
         x = rearrange(x, 'b t h w d -> b d t h w')
-        if self.dataset_name == 'temp_input_dataset':
+        if self.dataset_name == 'temp_dataset':
             x = self.head(x, patch_size=self.patch_size, stride=self.stride)
             return x.squeeze(dim=1)  # [B T H W]
 

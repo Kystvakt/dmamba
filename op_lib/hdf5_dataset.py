@@ -93,7 +93,6 @@ class HDF5Dataset(Dataset):
         TWALL = 'Twall-'
         if TWALL in filename:
             self._data['temp'] *= int(filename[len(TWALL):])
-            print('wall temp', self._data['temp'].max())
 
     def absmax_temp(self):
         return self._data['temp'].abs().max()

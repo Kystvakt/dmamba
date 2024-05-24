@@ -27,18 +27,17 @@ class Metrics:
     fourier_high: float
 
     def __str__(self):
-        return f"""
-            MAE: {self.mae}
-            RMSE: {self.rmse}
-            Relative Error: {self.relative_error}
-            Max Error: {self.max_error}
-            Boundary RMSE: {self.boundary_rmse}
-            Interface RMSE: {self.interface_rmse}
-            Fourier
-                - Low: {self.fourier_low}
-                - Mid: {self.fourier_mid}
-                - High: {self.fourier_high}
-        """
+        return (
+            f"\tMAE:            {self.mae}\n"
+            f"\tRelative Error: {self.relative_error}\n"
+            f"\tMax Error:      {self.max_error}\n"
+            f"\tRMSE:           {self.rmse}\n"
+            f"\tBoundary RMSE:  {self.boundary_rmse}\n"
+            f"\tInterface RMSE: {self.interface_rmse}\n"
+            f"\tFourier low:    {self.fourier_low}\n"
+            f"\tFourier mid:    {self.fourier_mid}\n"
+            f"\tFourier high:   {self.fourier_high}"
+        )
 
 
 def compute_metrics(pred, label, dfun):

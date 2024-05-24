@@ -1,10 +1,10 @@
-torch_dataset_name: temp_input_dataset
+torch_dataset_name: temp_dataset  # temp_dataset or vel_dataset
 
 distributed: False
 
 train:
   max_epochs: 1
-  batch_size: 1
+  batch_size: 8
   shuffle_data: True
   time_window: 5
   future_window: 5
@@ -14,16 +14,17 @@ train:
   downsample_factor: 1
 
 seed: 42
-log_to_wandb: false
+device: cuda:0
+verbose: True
+log_to_wandb: False
 wandb:
-  project: 'Bubble_Subcooled'
-  name: 'U-ViM3d separate'
+  project: 'BubbleML'
+  name: 'DMamba'
   api_key: 'e9f2308aef4f28fc8bbc3231e04370d8528cb993'
 
 model:
-  model_name: 'DMamba'
-  model_num: 2304
-  masking_ratio: 0.0
+  model_name: 'DMamba'  # this should be the same as the model class name
+  model_num: 1000
   time_window: 5
   push_forward_steps: 1
   input_size: [5, 512, 512]
@@ -37,7 +38,7 @@ model:
   depth: 3
   dropout: 0
   dropout_embed: 0
-  device: cuda:0
+
 
 optimizer:
   initial_lr: 1e-3
@@ -47,17 +48,3 @@ lr_scheduler:
   name: step
   factor: 0.5
   patience: 75
-
-# scheduler:
-#   initial_lr: 1.E-3
-#   step_size: 75
-#   gamma: 0.5
-
-# train:
-#   batch_size: 8 # batch size
-#   rec_results_freq : 500 # check point
-#   max_pseudo_epochs: 250 # num of epoch
-
-# test:
-#   batch_size: 1 #batch size
-#   test_pseudo_epochs: 1 # calculate test loss
