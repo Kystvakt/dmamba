@@ -17,8 +17,8 @@ seed: 42
 log_to_wandb: false
 wandb:
   project: 'Bubble_Subcooled'
-  name: 'U-ViM3d separate'
-  api_key: 'e9f2308aef4f28fc8bbc3231e04370d8528cb993'
+  name: 'dmamba'
+  api_key: 'use own wandb api key.'
 
 model:
   model_name: 'DMamba'
@@ -47,17 +47,3 @@ lr_scheduler:
   name: step
   factor: 0.5
   patience: 75
-
-# scheduler:
-#   initial_lr: 1.E-3
-#   step_size: 75
-#   gamma: 0.5
-
-# train:
-#   batch_size: 8 # batch size
-#   rec_results_freq : 500 # check point
-#   max_pseudo_epochs: 250 # num of epoch
-
-# test:
-#   batch_size: 1 #batch size
-#   test_pseudo_epochs: 1 # calculate test loss

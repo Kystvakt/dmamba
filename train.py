@@ -136,7 +136,7 @@ def train_app(cfg):
     if cfg.experiment.distributed:
         dist_util.initialize('nccl')
 
-    job_id = os.getenv('SLURM_JOB_ID')
+    job_id = cfg.experiment.exp_num
     if job_id:
         log_dir = f'{cfg.log_dir}/{job_id}'
     else:
@@ -170,13 +170,6 @@ def train_app(cfg):
     downsampled_rows = domain_rows / downsample_factor[0]
     downsampled_cols = domain_cols / downsample_factor[1]
 
-    # model = get_model(model_name,
-    #                   in_channels,
-    #                   out_channels,
-    #                   downsampled_rows,
-    #                   downsampled_cols,
-    #                   exp)
-    # MH (Start)
     model = get_model(model_name,
                       in_channels,
                       out_channels,
@@ -184,17 +177,12 @@ def train_app(cfg):
                       downsampled_cols,
                       exp,
                       cfg.experiment.model.device)
-    # MH (End)
 
     if cfg.model_checkpoint:
         model.load_state_dict(torch.load(cfg.model_checkpoint))
     print(model)
     np = nparams(model)
     print(f'Model has {np} parameters')
-    # MH (Start)
-    # print(f'Model device : {model.device}')
-    # MH (End)
-
     optimizer = torch.optim.AdamW(model.parameters(),
                                   lr=dist_util.world_size() * exp.optimizer.initial_lr,
                                   weight_decay=exp.optimizer.weight_decay)

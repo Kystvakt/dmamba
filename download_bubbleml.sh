@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Download the Single Bubble Simulation
+# # Download the Single Bubble Simulation
 wget https://bubble-ml-simulations.s3.us-east-2.amazonaws.com/single-bubble.tar.gz 
 tar -xvzf single-bubble.tar.gz && rm single-bubble.tar.gz
 
@@ -28,7 +28,7 @@ tar -xvzf flow-boiling-gravity-fc72-2d.tar.gz && rm flow-boiling-gravity-fc72-2d
 wget https://bubble-ml-simulations.s3.us-east-2.amazonaws.com/pool-boiling-subcooled-fc72-2d-0.1.tar.gz
 tar -xvzf pool-boiling-subcooled-fc72-2d-0.1.tar.gz && rm pool-boiling-subcooled-fc72-2d-0.1.tar.gz
 
-# Download the Gravity Pool Boiling study consisting of 9 simulations with 0.1 temporal resolution
+# # Download the Gravity Pool Boiling study consisting of 9 simulations with 0.1 temporal resolution
 https://bubble-ml-simulations.s3.us-east-2.amazonaws.com/pool-boiling-gravity-fc72-2d-0.1.tar.gz
 tar -xvzf pool-boiling-gravity-fc72-2d-0.1.tar.gz && rm pool-boiling-gravity-fc72-2d-0.1.tar.gz
 
