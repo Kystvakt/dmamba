@@ -1,4 +1,4 @@
-name: subcooled
+name: pb_subcooled
 transform: True
 steady_time: 30
 train_paths:

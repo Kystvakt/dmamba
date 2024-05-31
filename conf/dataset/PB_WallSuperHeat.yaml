@@ -1,4 +1,4 @@
-name: wall_super_heat
+name: pb_saturated
 transform: True
 steady_time: 30
 train_paths:

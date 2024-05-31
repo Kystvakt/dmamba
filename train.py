@@ -131,24 +131,23 @@ def train_app(cfg):
     if isinstance(downsample_factor, int):
         downsample_factor = [downsample_factor, downsample_factor]
     assert all([df >= 1 and isinstance(df, int) for df in downsample_factor])
-    cfg.experiment.train.downsample_factor = downsample_factor
 
-    if cfg.experiment.distributed:
+    cfg.experiment.train.downsample_factor = downsample_factor
+    exp = cfg.experiment
+    model_name = exp.model.model_name.lower()
+    
+    if exp.distributed:
         dist_util.initialize('nccl')
 
-    job_id = cfg.experiment.exp_num
+    job_id = exp.exp_num
     if job_id:
-        log_dir = f'{cfg.log_dir}/{job_id}'
+        log_dir = f'{cfg.log_dir}/{cfg.dataset.name}/{exp.torch_dataset_name}/{model_name}_{job_id}'
     else:
         log_dir = f'{cfg.log_dir}'
 
     writer = SummaryWriter(log_dir=log_dir)
 
-    fix_seed(cfg.experiment.seed)
-
-    # Logging
-    if cfg.experiment.log_to_wandb:
-        wandb.login(key=cfg.experiment.wandb.api_key)
+    fix_seed(exp.seed)
 
     train_dataset, val_dataset, train_max_temp, train_max_vel = build_datasets(cfg)
     train_dataloader, val_dataloader = build_dataloaders(train_dataset, val_dataset, cfg)
@@ -159,10 +158,13 @@ def train_app(cfg):
     # print('T_wall of val sim: ', val_variable)
     val_variable = 0
 
-    exp = cfg.experiment
-    model_name = exp.model.model_name.lower()
     in_channels = train_dataset.datasets[0].in_channels
     out_channels = train_dataset.datasets[0].out_channels
+
+    # Logging
+    if exp.log_to_wandb:
+        wandb.login(key=exp.wandb.api_key)
+
 
     # domain_rows and domain_cols are used to determine the number of modes
     # used in fourier models.
@@ -176,7 +178,7 @@ def train_app(cfg):
                       downsampled_rows,
                       downsampled_cols,
                       exp,
-                      cfg.experiment.model.device)
+                      exp.model.device)
 
     if cfg.model_checkpoint:
         model.load_state_dict(torch.load(cfg.model_checkpoint))
@@ -219,30 +221,17 @@ def train_app(cfg):
                            exp)
     print(trainer)
 
+    if exp.log_to_wandb:
+        project_name = f"{cfg.dataset.name}_{exp.torch_dataset_name.split("_")[0]}"
+        wandb.init(project=project_name, name=f"{model_name}_{exp.exp_num}")
+    
     if cfg.train and not cfg.model_checkpoint:
-        # trainer.train(exp.train.max_epochs, log_dir, dataset_name=cfg.dataset.name)
-        best_metrics, ckpt_path = trainer.train(exp.train.max_epochs, log_dir, dataset_name=cfg.dataset.name)
+        ckpt_path = trainer.train(exp.train.max_epochs, log_dir, dataset_name=cfg.dataset.name)
         timestamp = int(time.time())
-
-        # print(best_metrics)
-        # if cfg.experiment.distributed:
-        #     module = model.module
-        # else:
-        #     module = model
-
-        # model_name = module.__class__.__name__
-        # ckpt_file = f'{model_name}_{cfg.dataset.name}_{exp.torch_dataset_name}_{timestamp}.pt'
-        # #MH (Start)
-        # # ckpt_root = Path.home() / f'{log_dir}/{cfg.dataset.name}'
-        # ckpt_root = f'{log_dir}/{cfg.dataset.name}'
-        # #MH (End)
-        # Path(ckpt_root).mkdir(parents=True, exist_ok=True)
-        # ckpt_path = f'{ckpt_root}/{ckpt_file}'
-        # print(f'saving model to {ckpt_path}')
 
     if cfg.test and dist_util.is_leader_process():
         trainer.model.load_state_dict(torch.load(ckpt_path))
-        metrics = trainer.test(val_dataset.datasets[0])
+        metrics = trainer.test(val_dataset.datasets[0], log_dir)
 
         save_dict = {
             'id': f'{cfg.dataset.name}_{model_name}_{exp.torch_dataset_name}',
@@ -262,11 +251,9 @@ def train_app(cfg):
         }
 
         torch.save(save_dict, f'{ckpt_path}')
-
-        # if cfg.test and dist_util.is_leader_process():
-        #     metrics = trainer.test(val_dataset.datasets[0])
-        # print(metrics)
-
+    
+    if exp.log_to_wandb:
+        wandb.finish()
 
 if __name__ == '__main__':
     train_app()
