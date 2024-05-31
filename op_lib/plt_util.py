@@ -17,26 +17,19 @@ def temp_cmap():
     return cmap
 
 
-def plt_iter_mae(temps, labels):
+def plt_iter_mae(temps, labels, log_dir):
     plt.rc("font", family="serif", size=14, weight="bold")
     plt.rc("axes", labelweight="bold")
     rmses = []
     for i in range(len(temps)):
         rmse = torch.sqrt(torch.mean(((temps[i] - labels[i]) ** 2).detach().cpu()))
         rmses.append(rmse)
-    # MH (Start)
-    # MH (Start)
-    # job_id = os.environ['SLURM_JOB_ID']
-    # job_path = Path(f'test_im/temp/{job_id}/')
-    job_path = Path("./logs/test")
-    # MH (End)
-    job_path.mkdir(parents=True, exist_ok=True)
-    with open(str(job_path) + 'iter_rmse', 'w+') as f:
+    with open(f'{log_dir}/iter_rmse', 'w+') as f:
         for rmse in rmses:
             f.write(f'{rmse}\n')
 
 
-def plt_temp(temps, labels, model_name):
+def plt_temp(temps, labels, log_dir):
     temps = (temps + 1) / 2
     labels = (labels + 1) / 2
 
@@ -78,19 +71,14 @@ def plt_temp(temps, labels, model_name):
         plt.close()
     """
     # MH (Start)
-    # job_id = os.environ['SLURM_JOB_ID']
-    # im_path = Path(f'test_im/temp/{job_id}/')
-    im_path = Path("./logs/test")
-    # MH (End)
-    im_path.mkdir(parents=True, exist_ok=True)
-    torch.save(temps, f'{im_path}/model_ouput.pt')
-    torch.save(labels, f'{im_path}/sim_ouput.pt')
+    torch.save(temps, f'{log_dir}/model_ouput.pt')
+    torch.save(labels, f'{log_dir}/sim_ouput.pt')
 
 
 def plt_vel(vel_preds, vel_labels,
             velx_preds, velx_labels,
             vely_preds, vely_labels,
-            model_name):
+            log_dir):
     # vel_preds = (vel_preds + 1) / 2
     # vel_labels = (vel_labels + 1) / 2
 
@@ -132,19 +120,9 @@ def plt_vel(vel_preds, vel_labels,
         plt.savefig(f'{str(im_path)}/{i_str}.png', dpi=500)
         plt.close()
     """
-    # job_id = os.environ['SLURM_JOB_ID']
-    # im_path = Path(f'test_im/vel/{job_id}/')
-    # im_path.mkdir(parents=True, exist_ok=True)
-    # MH (Start)
-    # job_id = os.environ['SLURM_JOB_ID']
-    # im_path = Path(f'test_im/temp/{job_id}/')
-    im_path = Path("./logs/test")
-    im_path.mkdir(parents=True, exist_ok=True)
-    # MH (End)
-
-    torch.save(vel_preds, f'{im_path}/mag_ouput.pt')
-    torch.save(vel_labels, f'{im_path}/mag_label.pt')
-    torch.save(velx_preds, f'{im_path}/velx_output.pt')
-    torch.save(velx_labels, f'{im_path}/velx_label.pt')
-    torch.save(vely_preds, f'{im_path}/vely_output.pt')
-    torch.save(vely_labels, f'{im_path}/vely_label.pt')
+    torch.save(vel_preds, f'{log_dir}/mag_ouput.pt')
+    torch.save(vel_labels, f'{log_dir}/mag_label.pt')
+    torch.save(velx_preds, f'{log_dir}/velx_output.pt')
+    torch.save(velx_labels, f'{log_dir}/velx_label.pt')
+    torch.save(vely_preds, f'{log_dir}/vely_output.pt')
+    torch.save(vely_labels, f'{log_dir}/vely_label.pt')

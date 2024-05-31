@@ -1,4 +1,4 @@
-torch~=2.2.2
+# torch~=2.2.2
 einops~=0.8.0
 numpy~=1.26.4
 numba~=0.59.1
@@ -7,3 +7,14 @@ h5py~=3.11.0
 torchvision~=0.17.2
 omegaconf~=2.3.0
 mamba_ssm
+PyYAML
+hydra-core
+tensorly
+opt-einsum
+tensorly-torch
+zarr
+neuraloperator
+torch_harmonics
+causal-conv1d>=1.2.0
+wandb
+tensorboard
