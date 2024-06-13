@@ -18,7 +18,7 @@ log_to_wandb: false
 wandb:
   project: 'Bubble_Subcooled'
   name: 'dmamba'
-  api_key: 'use own wandb api key.'
+  api_key: 'use your own wandb api key.'
 
 model:
   model_name: 'DMamba'

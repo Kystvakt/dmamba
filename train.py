@@ -230,6 +230,7 @@ def train_app(cfg):
         timestamp = int(time.time())
 
     if cfg.test and dist_util.is_leader_process():
+        print(f"-----------Test with the best model----------")
         trainer.model.load_state_dict(torch.load(ckpt_path))
         metrics = trainer.test(val_dataset.datasets[0], log_dir)
 
