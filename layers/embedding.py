@@ -24,7 +24,6 @@ class FlexiPatchEmbed3d(nn.Module):
         assert len(input_size) == len(patch_size) == len(stride), (
             f"Length of the input size ({input_size}), patch size ({patch_size}) and stride ({stride}) should be equal"
         )
-        self.training = False
         self.input_size = input_size
         self.patch_size = patch_size
         self.stride = stride
@@ -100,9 +99,7 @@ class FlexiPatchEmbed3d(nn.Module):
             x: torch.Tensor,
             patch_size: Optional[tuple] = None,
             return_patch_size: bool = False,
-            training: bool = False
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, tuple]]:
-        self.training = training
         if patch_size is None and not self.training:
             patch_size = self.patch_size
         elif patch_size is None:

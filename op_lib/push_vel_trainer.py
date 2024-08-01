@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as F  # noqa
 import wandb
 
 from .dist_util import is_leader_process
@@ -20,17 +20,19 @@ t_bulk_map = {
 
 
 class PushVelTrainer:
-    def __init__(self,
-                 model,
-                 future_window,
-                 max_push_forward_steps,
-                 train_dataloader,
-                 val_dataloader,
-                 optimizer,
-                 lr_scheduler,
-                 val_variable,
-                 writer,
-                 cfg):
+    def __init__(
+            self,
+            model,
+            future_window,
+            max_push_forward_steps,
+            train_dataloader,
+            val_dataloader,
+            optimizer,
+            lr_scheduler,
+            val_variable,
+            writer,
+            cfg
+    ):
         self.model = model
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
@@ -102,7 +104,7 @@ class PushVelTrainer:
                 # self.test(val_dataset)
                 # self.save_checkpoint(log_dir, dataset_name)
                 # MH (Start)
-                temp_metrics, velx_metrics, vely_metrics = self.test(val_dataset)
+                temp_metrics, velx_metrics, vely_metrics = self.test(val_dataset, log_dir)
                 if temp_metrics.rmse < best_rmse:
                     best_rmse = temp_metrics.rmse
                     save_metrics = (temp_metrics, velx_metrics, vely_metrics)
@@ -312,7 +314,7 @@ class PushVelTrainer:
             val_logs['val_vel_loss'] = val_vel_loss / len(self.val_dataloader)
             wandb.log(val_logs, step=epoch)
 
-    def test(self, dataset, max_time_limit=200):
+    def test(self, dataset, log_dir, max_time_limit=200):
         self.model.eval()
         temps = []
         temps_labels = []
@@ -376,7 +378,7 @@ class PushVelTrainer:
         # print(heatflux(labels, dfun, self.val_variable, xgrid, dataset.get_dy()))
 
         model_name = self.model.__class__.__name__
-        plt_iter_mae(temps, temps_labels)
+        plt_iter_mae(temps, temps_labels, log_dir=log_dir)
         plt_temp(temps, temps_labels, model_name)
 
         def mag(velx, vely):

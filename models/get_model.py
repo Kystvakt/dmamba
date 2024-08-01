@@ -5,9 +5,10 @@ from models.unet_bench import UNet2d
 from neuralop.models import FNO, UNO
 from .gefno.gfno import GFNO2d
 from models.DMamba import DMamba
-from .factorized_fno.factorized_fno import FNOFactorized2DBlock 
+from models.NDMamba import NDMamba
+from models.Transolver import Transolver
 
-
+from .factorized_fno.factorized_fno import FNOFactorized2DBlock
 
 # Model names
 _UNET_BENCH = 'unet_bench'
@@ -19,6 +20,8 @@ _FFNO = 'factorized_fno'
 _GFNO = 'gfno'
 _CNO = 'cno'
 _DMamba = 'dmamba'
+_NDMamba = 'ndmamba'
+_Transolver = 'transolver'
 
 # Model list
 _MODEL_LIST = [
@@ -31,6 +34,8 @@ _MODEL_LIST = [
     _GFNO,
     _CNO,
     _DMamba,
+    _NDMamba,
+    _Transolver
 ]
 
 
@@ -45,6 +50,7 @@ def get_model(
 ):
     assert model_name in _MODEL_LIST, f'Model name {model_name} invalid'
 
+    # U-Net models
     if model_name == _UNET_ARENA:
         model = Unet(
             in_channels=in_channels,
@@ -63,6 +69,8 @@ def get_model(
             out_channels=out_channels,
             init_features=exp.model.init_features
         )
+
+    # FNO models
     elif model_name == _FNO:
         model = FNO(
             n_modes=(exp.model.modes, exp.model.modes),
@@ -78,20 +86,23 @@ def get_model(
             separable=False
         )
     elif model_name == _GFNO:
-        model = GFNO2d(in_channels=in_channels,
-                       out_channels=out_channels,
-                       modes=exp.model.modes // 2,
-                       width=exp.model.width,
-                       reflection=exp.model.reflection,
-                       domain_padding=exp.model.domain_padding) # padding is NEW
-    
+        model = GFNO2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            modes=exp.model.modes // 2,
+            width=exp.model.width,
+            reflection=exp.model.reflection,
+            domain_padding=exp.model.domain_padding
+        )  # padding is NEW
     elif model_name == _FFNO:
-        model = FNOFactorized2DBlock(in_channels=in_channels,
-                                     out_channels=out_channels,
-                                     modes=exp.model.modes // 2,
-                                     width=exp.model.width,
-                                     dropout=exp.model.dropout,
-                                     n_layers=exp.model.n_layers)
+        model = FNOFactorized2DBlock(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            modes=exp.model.modes // 2,
+            width=exp.model.width,
+            dropout=exp.model.dropout,
+            n_layers=exp.model.n_layers
+        )
     elif model_name == _UNO:
         model = UNO(
             in_channels=in_channels,
@@ -104,8 +115,16 @@ def get_model(
             n_layers=exp.model.n_layers,
             domain_padding=exp.model.domain_padding
         )
+
+    # Mamba models
     elif model_name == _DMamba:
         model = DMamba(exp.model, exp.torch_dataset_name)
+    elif model_name == _NDMamba:
+        model = NDMamba(exp.model, exp.torch_dataset_name)
+
+    # Other models
+    elif model_name == _Transolver:
+        model = Transolver(dataset_name=exp.torch_dataset_name)
     else:
         raise NotImplementedError
 
