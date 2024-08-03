@@ -52,7 +52,7 @@ Our model achieves the following performance on:
 ### Temperature prediction on Pool-Boiling-Saturated
 | Model name | RMSE  |
 |------------|-------|
-| D-Mamba    | 0.027 |
+| D-Mamba    | 0.029 |
 
 ## Citation
 

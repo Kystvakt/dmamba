@@ -17,14 +17,16 @@ seed: 42
 exp_num: 1235
 log_to_wandb: true
 wandb:
-  project: 'Bubble_Subcooled'
-  name: 'dmamba'
+  project: 'Bubble_Subcooled_0.1'
+  name: 'Transolver'
   # api_key: 'use your own wandb api key.'
-  api_key: '7657cf76613a4fe91247b254b4adfe5de555b20b'
+  api_key: 'e9f2308aef4f28fc8bbc3231e04370d8528cb993'
 
 model:
-  model_name: 'DMamba'
+  model_name: 'Transolver'
   masking_ratio: 0.0
+  time_window: 5
+  push_forward_steps: 1
   input_size: [5, 512, 512]
   patch_size: [1, 16, 16]
   stride: [1, 8, 8]

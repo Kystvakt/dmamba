@@ -17,9 +17,10 @@ seed: 42
 exp_num: 2001
 log_to_wandb: true
 wandb:
-  project: 'Bubble_Subcooled'
+  project: 'Bubble_Subcooled_0.1'
   name: 'unet_arena'
-  api_key: 'use your own wandb api key.'
+  # api_key: 'use your own wandb api key.'
+  api_key: '7657cf76613a4fe91247b254b4adfe5de555b20b'
 
 model:
   model_name: unet_arena
