@@ -138,14 +138,14 @@ class DMamba(nn.Module):
             self.head_temp = UnPatchEmbed3d(
                 patch_size=self.patch_size,
                 stride=self.stride,
-                channels=5,
+                channels=1,
                 d_embed=self.dim,
                 bias=True
             )
             self.head_vel = UnPatchEmbed3d(
                 patch_size=self.patch_size,
                 stride=self.stride,
-                channels=10,
+                channels=2,
                 d_embed=self.dim,
                 bias=True
             )
@@ -236,7 +236,9 @@ class DMamba(nn.Module):
             return x.squeeze(dim=1)  # [B T H W]
 
         elif self.dataset_name == 'tempvel_input_dataset':
-            x_temp = self.head_temp(x, patch_size=self.patch_size, stride=self.stride)
-            x_vel = self.head_vel(x, patch_size=self.patch_size, stride=self.stride)
-            x = torch.cat([x_temp, x_vel], dim=1)
+            x_temp = self.head_temp(x, patch_size=self.patch_size, stride=self.stride) # [B 1 T H W]
+            x_vel = self.head_vel(x, patch_size=self.patch_size, stride=self.stride) # [B 2 T H W]
+            x_temp = x_temp.squeeze(dim=1) # [B T(5) H W]
+            x_vel = x_vel.flatten(1, 2) # [B T(10) H W]
+            x = torch.cat([x_temp, x_vel], dim=1) # [B T(15) H W]
             return x

@@ -86,10 +86,10 @@ class PushVelTrainer:
             self.train_step(epoch, max_epochs)
             self.val_step(epoch)
             val_dataset = self.val_dataloader.dataset.datasets[0]
-            temp_metrics, velx_metrics, vely_metrics = self.test(val_dataset)
+            temp_metrics, velx_metrics, vely_metrics = self.test(val_dataset, log_dir)
             
             # Save model based on the average rmse
-            avg_rmse = (temp_metrics.rmse + velx_metrics + vely_metrics) / 3
+            avg_rmse = (temp_metrics.rmse + velx_metrics.rmse + vely_metrics.rmse) / 3
             if avg_rmse < best_rmse:
                 best_rmse = avg_rmse
                 save_metrics = (temp_metrics, velx_metrics, vely_metrics)
@@ -200,18 +200,13 @@ class PushVelTrainer:
             push_forward_steps = self.push_forward_prob(epoch, max_epochs)
 
             temp_pred, vel_pred = self.push_forward_trick(coords, temp, vel, dfun, push_forward_steps)
-            print(temp_pred.shape, vel_pred.shape)
             idx = (push_forward_steps - 1)
-            print(vel_pred.shape, vel_label.shape)
             temp_label = temp_label[:, idx].to(self.device).float()
             vel_label = vel_label[:, idx].to(self.device).float()
-            print(vel_pred.shape, vel_label.shape)
             temp_label, vel_label = downsample_domain(self.cfg.train.downsample_factor, temp_label, vel_label)
-            print(vel_pred.shape, vel_label.shape)
-
+            
             temp_loss = F.mse_loss(temp_pred, temp_label)
             vel_loss = F.mse_loss(vel_pred, vel_label)
-            print(temp_loss.shape, vel_loss.shape)
             loss = (temp_loss + vel_loss) / 2
             self.optimizer.zero_grad()
             loss.backward()
@@ -337,7 +332,7 @@ class PushVelTrainer:
         # print(heatflux(temps, dfun, self.val_variable, xgrid, dataset.get_dy()))
         # print(heatflux(labels, dfun, self.val_variable, xgrid, dataset.get_dy()))
 
-        plt_iter_mae(temps, temps_labels)
+        plt_iter_mae(temps, temps_labels, log_dir)
         plt_temp(temps, temps_labels, log_dir)
 
         def mag(velx, vely):
