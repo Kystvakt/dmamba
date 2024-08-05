@@ -19,7 +19,7 @@ log_to_wandb: true
 wandb:
   project: 'Bubble_Subcooled'
   name: 'Transolver'
-  api_key: 'e9f2308aef4f28fc8bbc3231e04370d8528cb993'
+  api_key: 'use your own wandb api key.'
 
 model:
   model_name: 'Transolver'

@@ -19,8 +19,7 @@ log_to_wandb: True
 wandb:
   project: 'Bubble_Subcooled_0.1'
   name: 'gfno'
-  # api_key: 'use your own wandb api key.'
-  api_key: '7657cf76613a4fe91247b254b4adfe5de555b20b'
+  api_key: 'use your own wandb api key.'
 
 model:
   model_name: gfno
