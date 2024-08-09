@@ -17,7 +17,7 @@ seed: 42
 exp_num: 5001
 log_to_wandb: True
 wandb:
-  project: 'Bubble_Subcooled'
+  project: 'Bubble_Subcooled_0.1'
   name: 'ffno'
   api_key: 'use your own wandb api key.'  
 

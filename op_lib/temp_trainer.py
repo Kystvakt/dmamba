@@ -47,13 +47,12 @@ class TempTrainer:
         self.future_window = future_window
         self.local_rank = local_rank()
 
-    def save_checkpoint(self, log_dir, dataset_name, epoch):
-        timestamp = int(time.time())
+    def save_checkpoint(self, log_dir, epoch):
         if self.cfg.distributed:
             model_name = self.model.module.__class__.__name__.lower()
         else:
             model_name = self.model.__class__.__name__.lower()
-        ckpt_file = f'{model_name}_{self.cfg.torch_dataset_name.split("_")[0]}_{self.cfg.exp_num}.pt'
+        ckpt_file = f'{model_name}_{self.cfg.torch_dataset_name.split("_")[0]}_{self.cfg.exp_num}_{epoch}.pt'
         Path(log_dir).mkdir(parents=True, exist_ok=True)
         ckpt_path = f'{log_dir}/{ckpt_file}'
         print(f'saving model to {ckpt_path}')
@@ -77,7 +76,7 @@ class TempTrainer:
             if metrics.rmse < best_rmse:
                 best_rmse = metrics.rmse
                 save_metrics = metrics
-                ckpt_path = self.save_checkpoint(log_dir, dataset_name, epoch)
+                ckpt_path = self.save_checkpoint(log_dir, epoch)
 
             if self.log_to_wandb:
                 test_logs = defaultdict(float)
@@ -115,6 +114,7 @@ class TempTrainer:
         self.model.train()
         epoch_loss = 0
         epoch_mse_loss = 0
+        start = time.time()
         for iter, (coords, temp, vel, label) in enumerate(self.train_dataloader):
             coords = coords.to(self.device).float()
             temp = temp.to(self.device).float()
@@ -137,10 +137,10 @@ class TempTrainer:
             global_iter = epoch * len(self.train_dataloader) + iter
             write_metrics(pred, label, global_iter, 'Train', self.writer)
             del temp, vel, label
-            
+        end = time.time()
 
         print(
-            f'Train loss: {epoch_loss / len(self.train_dataloader):.4f}, MSE: {epoch_mse_loss / len(self.train_dataloader):.4f}')
+            f'Epoch : {epoch} | Train loss: {epoch_loss / len(self.train_dataloader):.4f} | MSE: {epoch_mse_loss / len(self.train_dataloader):.4f} | Time: {end - start:.2f}s')
         if self.log_to_wandb:
             train_logs = defaultdict(float)
             train_logs['train_loss'] = epoch_loss / len(self.train_dataloader)
@@ -150,6 +150,7 @@ class TempTrainer:
     def val_step(self, epoch):
         val_epoch_loss = 0
         self.model.eval()
+        start = time.time()
         for iter, (coords, temp, vel, label) in enumerate(self.val_dataloader):
             coords = coords.to(self.device).float()
             temp = temp.to(self.device).float()
@@ -162,52 +163,51 @@ class TempTrainer:
             global_iter = epoch * len(self.val_dataloader) + iter
             write_metrics(pred, label, global_iter, 'Val', self.writer)
             del temp, vel, label
+        end = time.time()
             
-
-        print(f'Val loss: {val_epoch_loss / len(self.val_dataloader):.4f}')
+        print(f'Epoch : {epoch} | Val MSE: {val_epoch_loss / len(self.val_dataloader):.4f} | Time: {end - start:.2f}s')
         if self.log_to_wandb:
             val_logs = defaultdict(float)
             val_logs['val_loss'] = val_epoch_loss / len(self.val_dataloader)
             wandb.log(val_logs, step=epoch)
 
     def test(self, dataset, log_dir, max_timestep=200):
-        if is_leader_process():
-            self.model.eval()
-            temps = []
-            labels = []
-            time_lim = min(len(dataset), max_timestep)
+        self.model.eval()
+        temps = []
+        labels = []
+        time_lim = min(len(dataset), max_timestep)
 
-            start = time.time()
-            for timestep in range(0, time_lim, self.future_window):
-                coords, temp, vel, label = dataset[timestep]
-                coords = coords.to(self.device).float().unsqueeze(0)
-                temp = temp.to(self.device).float().unsqueeze(0)
-                vel = vel.to(self.device).float().unsqueeze(0)
-                label = label.to(self.device).float()
-                
-                with torch.no_grad():
-                    pred = self._forward_int(coords, temp, vel)
-                    temp = F.hardtanh(pred.squeeze(0), -1, 1)
-                    dataset.write_temp(temp, timestep)
-                    temps.append(temp.detach().cpu())
-                    labels.append(label.detach().cpu())
-            dur = time.time() - start
-            print(f'rollout time {dur:.4f} (s)')
+        start = time.time()
+        for timestep in range(0, time_lim, self.future_window):
+            coords, temp, vel, label = dataset[timestep]
+            coords = coords.to(self.device).float().unsqueeze(0)
+            temp = temp.to(self.device).float().unsqueeze(0)
+            vel = vel.to(self.device).float().unsqueeze(0)
+            label = label.to(self.device).float()
+            
+            with torch.no_grad():
+                pred = self._forward_int(coords, temp, vel)
+                temp = F.hardtanh(pred.squeeze(0), -1, 1)
+                dataset.write_temp(temp, timestep)
+                temps.append(temp.detach().cpu())
+                labels.append(label.detach().cpu())
+        dur = time.time() - start
+        print(f'rollout time {dur:.4f} (s)')
 
-            temps = torch.cat(temps, dim=0)
-            labels = torch.cat(labels, dim=0)
-            dfun = dataset.get_dfun()[:temps.size(0)]
+        temps = torch.cat(temps, dim=0)
+        labels = torch.cat(labels, dim=0)
+        dfun = dataset.get_dfun()[:temps.size(0)]
 
-            # print(temps.max(), temps.min())
-            # print(labels.max(), labels.min())
+        # print(temps.max(), temps.min())
+        # print(labels.max(), labels.min())
 
-            metrics = compute_metrics(temps, labels, dfun)
-            print(metrics)
+        metrics = compute_metrics(temps, labels, dfun)
+        print(metrics)
 
-            plt_temp(temps, labels, log_dir)
+        plt_temp(temps, labels, log_dir)
 
-            plt_iter_mae(temps, labels, log_dir)
+        plt_iter_mae(temps, labels, log_dir)
 
-            dataset.reset()
+        dataset.reset()
 
-            return metrics
+        return metrics

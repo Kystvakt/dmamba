@@ -1,4 +1,4 @@
-torch_dataset_name: temp_input_dataset 
+torch_dataset_name: temp_input_dataset
 
 distributed: False
 
@@ -14,18 +14,31 @@ train:
   downsample_factor: 1
 
 seed: 42
-exp_num: 3001
-log_to_wandb: True
+exp_num: 1235
+log_to_wandb: true
 wandb:
   project: 'Bubble_Subcooled_0.1'
-  name: 'unet_bench'
+  name: 'Transolver'
   api_key: 'use your own wandb api key.'
 
 model:
-  model_name: unet_bench
-  init_features: 64
+  model_name: 'Transolver'
+  masking_ratio: 0.0
+  time_window: 5
+  push_forward_steps: 1
+  input_size: [5, 512, 512]
+  patch_size: [1, 16, 16]
+  stride: [1, 8, 8]
+  channels: 7
+  dim: 32
+  mlp_ratio: 4
+  patch_size_seq: [[1, 16, 16]]
+  patch_size_probs: null
+  depth: 3
+  dropout: 0
+  dropout_embed: 0
   device: cuda:0
-  
+
 optimizer:
   initial_lr: 1e-3
   weight_decay: 0.01

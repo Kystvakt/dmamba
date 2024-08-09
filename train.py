@@ -31,13 +31,13 @@ from op_lib.temp_trainer import TempTrainer
 
 torch_dataset_map = {
     'temp_input_dataset': (DiskTempInputDataset, TempInputDataset),
-    'vel_dataset': (DiskTempVelDataset, TempVelDataset)
+    'tempvel_input_dataset': (DiskTempVelDataset, TempVelDataset)
 }
 
 
 trainer_map = {
     'temp_input_dataset': TempTrainer,
-    'vel_dataset': PushVelTrainer
+    'tempvel_input_dataset': PushVelTrainer
 }
 
 

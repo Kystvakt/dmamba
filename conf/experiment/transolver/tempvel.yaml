@@ -1,10 +1,10 @@
-torch_dataset_name: temp_input_dataset
+torch_dataset_name: vel_dataset
 
 distributed: False
 
 train:
-  max_epochs: 250
-  batch_size: 8
+  max_epochs: 1
+  batch_size: 1
   shuffle_data: True
   time_window: 5
   future_window: 5
@@ -14,16 +14,20 @@ train:
   downsample_factor: 1
 
 seed: 42
-exp_num: 1235
+exp_num: 1236
 log_to_wandb: true
 wandb:
   project: 'Bubble_Subcooled'
-  name: 'dmamba'
+
+  name: 'Transolver'
   api_key: 'use your own wandb api key.'
 
 model:
-  model_name: 'DMamba'
+  model_name: 'Transolver'
+  model_num: 2304
   masking_ratio: 0.0
+  time_window: 5
+  push_forward_steps: 1
   input_size: [5, 512, 512]
   patch_size: [1, 16, 16]
   stride: [1, 8, 8]
