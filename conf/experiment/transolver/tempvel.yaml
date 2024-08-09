@@ -18,6 +18,7 @@ exp_num: 1236
 log_to_wandb: true
 wandb:
   project: 'Bubble_Subcooled'
+
   name: 'Transolver'
   api_key: 'use your own wandb api key.'
 
