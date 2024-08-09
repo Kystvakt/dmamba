@@ -1,0 +1,46 @@
+torch_dataset_name: tempvel_input_dataset
+
+distributed: False
+
+train:
+  max_epochs: 100
+  batch_size: 8
+  shuffle_data: True
+  time_window: 5
+  future_window: 5
+  push_forward_steps: 5
+  use_coords: False
+  noise: True
+  downsample_factor: 1
+
+seed: 42
+exp_num: 1235
+log_to_wandb: true
+wandb:
+  project: 'Bubble_Subcooled_0.1'
+  name: 'dmamba'
+  api_key: 'use your own wandb api key.'
+
+model:
+  model_name: 'DMamba'
+  masking_ratio: 0.0
+  input_size: [5, 512, 512]
+  patch_size: [1, 16, 16]
+  stride: [1, 8, 8]
+  channels: 7
+  dim: 32
+  mlp_ratio: 4
+  patch_size_seq: [[1, 16, 16]]
+  patch_size_probs: null
+  depth: 3
+  dropout: 0
+  dropout_embed: 0
+  device: cuda:0
+
+optimizer:
+  initial_lr: 5e-4
+  weight_decay: 0.011e-4
+
+lr_scheduler:
+  name: cosine
+  eta_min: 1e-6

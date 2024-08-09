@@ -31,13 +31,13 @@ from op_lib.temp_trainer import TempTrainer
 
 torch_dataset_map = {
     'temp_input_dataset': (DiskTempInputDataset, TempInputDataset),
-    'vel_dataset': (DiskTempVelDataset, TempVelDataset)
+    'tempvel_input_dataset': (DiskTempVelDataset, TempVelDataset)
 }
 
 
 trainer_map = {
     'temp_input_dataset': TempTrainer,
-    'vel_dataset': PushVelTrainer
+    'tempvel_input_dataset': PushVelTrainer
 }
 
 
@@ -230,6 +230,7 @@ def train_app(cfg):
         timestamp = int(time.time())
 
     if cfg.test and dist_util.is_leader_process():
+        print(f"-----------Test with the best model----------")
         trainer.model.load_state_dict(torch.load(ckpt_path))
         metrics = trainer.test(val_dataset.datasets[0], log_dir)
 

@@ -14,15 +14,15 @@ train:
   downsample_factor: 1
 
 seed: 42
-exp_num: 1234
+exp_num: 1235
 log_to_wandb: true
 wandb:
-  project: 'Bubble_Subcooled'
-  name: 'dmamba'
-  api_key: 'Use your own api key.'
+  project: 'Bubble_Subcooled_0.1'
+  name: 'Transolver'
+  api_key: 'use your own wandb api key.'
 
 model:
-  model_name: 'DMamba'
+  model_name: 'Transolver'
   masking_ratio: 0.0
   time_window: 5
   push_forward_steps: 1

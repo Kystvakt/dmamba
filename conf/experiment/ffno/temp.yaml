@@ -1,0 +1,40 @@
+torch_dataset_name: temp_input_dataset
+
+distributed: False
+
+train:
+  max_epochs: 250 
+  batch_size: 8
+  shuffle_data: True
+  time_window: 5
+  future_window: 5
+  push_forward_steps: 1
+  use_coords: True
+  noise: True
+  downsample_factor: 2
+
+seed: 42
+exp_num: 5001
+log_to_wandb: True
+wandb:
+  project: 'Bubble_Subcooled_0.1'
+  name: 'ffno'
+  api_key: 'use your own wandb api key.'  
+
+model:
+  model_name: factorized_fno
+  modes: 64
+  width: 256
+  dropout: 0.0
+  n_layers: 7
+  layer_norm: True
+  device: cuda:0
+
+optimizer:
+  initial_lr: 1e-3
+  weight_decay: 0.01
+
+lr_scheduler:
+  name: 'step'
+  factor: 0.5
+  patience: 75

@@ -7,11 +7,11 @@ from layers.mamba import Mamba3dLayer
 
 
 class DMamba(nn.Module):
-    def __init__(self, config, dataset_name='temp_input_dataset'):
+    def __init__(self, config, time_window, dataset_name='temp_input_dataset'):
         super().__init__()
 
         # Configuration
-        self.time_window = config.time_window
+        self.time_window = time_window
         self.input_size = tuple(config.input_size)
         self.patch_size = tuple(config.patch_size)
         self.stride = tuple(config.stride)
@@ -34,7 +34,7 @@ class DMamba(nn.Module):
         self.dataset_name = dataset_name
         if self.dataset_name == 'temp_input_dataset':
             self.out_channels = 5
-        elif self.dataset_name == 'vel_dataset':
+        elif self.dataset_name == 'tempvel_input_dataset':
             self.out_channels = 15
 
         # Patch Embedding
@@ -60,6 +60,18 @@ class DMamba(nn.Module):
             norm_layer=self.norm_layer,
             bias=True,
         )
+        if self.dataset_name == 'tempvel_input_dataset':
+            self.patch_embedding3 = FlexiPatchEmbed3d(
+            input_size=self.input_size,
+            patch_size=self.patch_size,
+            stride=self.stride,
+            channels=1,  # channels * predict time window
+            d_embed=self.dim,
+            patch_size_seq=self.patch_size_seq,
+            patch_size_probs=self.patch_size_probs,
+            norm_layer=self.norm_layer,
+            bias=True,
+        )
         self.t = int((self.input_size[0] - self.patch_size[0]) / self.stride[0] + 1)
         self.h = int((self.input_size[1] - self.patch_size[1]) / self.stride[1] + 1)
         self.w = int((self.input_size[2] - self.patch_size[2]) / self.stride[2] + 1)
@@ -77,6 +89,16 @@ class DMamba(nn.Module):
             ) for i in range(self.depth)
         )
         self.encoder2 = nn.ModuleList(
+            nn.Sequential(
+                Mamba3dLayer(dim=dims[i], depth=2, attn_drop=self.dropout),
+                nn.Linear(dims[i], dims[i + 1]),
+                nn.LayerNorm(dims[i + 1]),
+                nn.SiLU()
+            ) for i in range(self.depth)
+        )
+
+        if self.dataset_name == 'tempvel_input_dataset':
+            self.encoder3 = nn.ModuleList(
             nn.Sequential(
                 Mamba3dLayer(dim=dims[i], depth=2, attn_drop=self.dropout),
                 nn.Linear(dims[i], dims[i + 1]),
@@ -112,18 +134,18 @@ class DMamba(nn.Module):
                 d_embed=self.dim,
                 bias=True
             )
-        elif self.dataset_name == 'vel_dataset':
+        elif self.dataset_name == 'tempvel_input_dataset':
             self.head_temp = UnPatchEmbed3d(
                 patch_size=self.patch_size,
                 stride=self.stride,
-                channels=5,
+                channels=1,
                 d_embed=self.dim,
                 bias=True
             )
             self.head_vel = UnPatchEmbed3d(
                 patch_size=self.patch_size,
                 stride=self.stride,
-                channels=10,
+                channels=2,
                 d_embed=self.dim,
                 bias=True
             )
@@ -134,20 +156,16 @@ class DMamba(nn.Module):
             temp = x[:, :self.time_window, ...]
             u = x[:, self.time_window:2 * self.time_window, ...]
             v = x[:, 3 * self.time_window:4 * self.time_window, ...]
-            h = repeat(x[:, -2, ...], 'b h w -> b t h w', t=self.time_window)
-            w = repeat(x[:, -1, ...], 'b h w -> b t h w', t=self.time_window)
             u_future = x[:, 2 * self.time_window:3 * self.time_window, ...]
             v_future = x[:, 4 * self.time_window:5 * self.time_window, ...]
 
         # Predicting temperature and velocity
-        elif self.dataset_name == 'vel_dataset':
+        elif self.dataset_name == 'tempvel_input_dataset':
             temp = x[:, :self.time_window, ...]
             u = x[:, self.time_window:2 * self.time_window, ...]
             v = x[:, 2 * self.time_window:3 * self.time_window, ...]
             dfun = x[:, 3 * self.time_window:, ...]
-            h = repeat(x[:, -2, ...], 'b h w -> b t h w', t=self.time_window)
-            w = repeat(x[:, -1, ...], 'b h w -> b t h w', t=self.time_window)
-
+            
         # Patch embeddings
         # temp = T(t)
         temp = temp.unsqueeze(dim=1)  # [B 1 T H W]
@@ -162,11 +180,18 @@ class DMamba(nn.Module):
         uv1 = rearrange(uv1, 'b d t h w -> b t h w d')
 
         # uv2 = U(t+1)
-        uv2 = torch.stack([u_future, v_future], dim=1)  # [B 2 T H W]
-        uv2 = self.patch_embedding2(uv2, return_patch_size=False, training=self.training)
-        uv2 = self.dropout(uv2)
-        uv2 = rearrange(uv2, 'b d t h w -> b t h w d')
-
+        if self.dataset_name == 'temp_input_dataset':
+            uv2 = torch.stack([u_future, v_future], dim=1)  # [B 2 T H W]
+            uv2 = self.patch_embedding2(uv2, return_patch_size=False, training=self.training)
+            uv2 = self.dropout(uv2)
+            uv2 = rearrange(uv2, 'b d t h w -> b t h w d')
+        
+        elif self.dataset_name == 'tempvel_input_dataset':
+            dfun = dfun.unsqueeze(dim=1)  # [B 1 T H W]
+            dfun = self.patch_embedding3(dfun, return_patch_size=False, training=self.training)
+            dfun = self.dropout(dfun)
+            dfun = rearrange(dfun, 'b d t h w -> b t h w d')
+        
         # Encoders
         temps = []
         for layer in self.encoder1:
@@ -178,13 +203,23 @@ class DMamba(nn.Module):
             uv1 = layer(uv1)
             uv1s.append(uv1)
 
-        uv2s = []
-        for layer in self.encoder2:
-            uv2 = layer(uv2)
-            uv2s.append(uv2)
+        
+        if self.dataset_name == 'temp_input_dataset':
+            uv2s = []
+            for layer in self.encoder2:
+                uv2 = layer(uv2)
+                uv2s.append(uv2)
+            # Bottleneck
+            x = temp + uv1 + uv2
+        
+        elif self.dataset_name == 'tempvel_input_dataset':
+            dfuns = []
+            for layer in self.encoder3:
+                dfun = layer(dfun)
+                dfuns.append(dfun)
+            # Bottleneck
+            x = temp + uv1 + dfun
 
-        # Bottleneck
-        x = temp + uv1 + uv2
         x = self.bridge(x)
 
         # Decoder
@@ -200,8 +235,10 @@ class DMamba(nn.Module):
             x = self.head(x, patch_size=self.patch_size, stride=self.stride)
             return x.squeeze(dim=1)  # [B T H W]
 
-        elif self.dataset_name == 'vel_dataset':
-            x_temp = self.head_temp(x, patch_size=self.patch_size, stride=self.stride)
-            x_vel = self.head_vel(x, patch_size=self.patch_size, stride=self.stride)
-            x = torch.cat([x_temp, x_vel], dim=1)
+        elif self.dataset_name == 'tempvel_input_dataset':
+            x_temp = self.head_temp(x, patch_size=self.patch_size, stride=self.stride) # [B 1 T H W]
+            x_vel = self.head_vel(x, patch_size=self.patch_size, stride=self.stride) # [B 2 T H W]
+            x_temp = x_temp.squeeze(dim=1) # [B T(5) H W]
+            x_vel = x_vel.flatten(1, 2) # [B T(10) H W]
+            x = torch.cat([x_temp, x_vel], dim=1) # [B T(15) H W]
             return x
