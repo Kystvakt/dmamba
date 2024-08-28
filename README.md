@@ -1,6 +1,8 @@
-# Paper Title
+# Learning Multiphase and Multiphysics System with Decoupled State Space Model (DMamba)
 
 This repository is the official implementation of [Learning Multiphase and Multiphysics System with Decoupled State Space Model]().
+
+<img src="./imgs/bubble.gif">
 
 ## Requirements
 
